@@ -7,7 +7,7 @@ const {createNote,deleteNote,updateNote,fetchNote} = require('../controllers/not
 
 router.route('/fetch').get(verify,fetchNote);
 router.route('/createNote').post(verify,createNote);
-router.route('/update/:id').post(verify,updateNote);
+router.route('/update/:id').put(verify,updateNote);
 router.route('/delete/:id').delete(verify,deleteNote);
 
 

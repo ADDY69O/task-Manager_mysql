@@ -17,7 +17,7 @@ const id = req.user.id;
 
 
 
-db.query('select note_id,note_title,note_description,note_tag from notesdata where id = ?',[id],(err,result)=>{
+db.query('select note_id,note_title,note_description,note_tag,id from notesdata where id = ?',[id],(err,result)=>{
     if(err){
         return res.status(401).json({message:"internal server error",err})
     }
@@ -41,7 +41,14 @@ const createNote = (req,res)=>{
         if(err){
             return res.status(401).json({message:"internal server error",err})
         }
-        return res.status(200).json({message:"notes created successfully",result})
+        // return res.status(200).json({message:"notes created successfully",data:result[0]})
+        const insertedNoteId = result.insertId;
+            db.query('SELECT * FROM notesdata WHERE note_id = ?', [insertedNoteId], (err, noteResult) => {
+                if (err) {
+                    return res.status(401).json({ message: "internal server error", err });
+                }
+                return res.status(200).json({ message: "note created successfully", data: noteResult[0] });
+            });
     })
 
 
@@ -55,14 +62,16 @@ const createNote = (req,res)=>{
 
 const deleteNote = (req,res)=>{
 
-    const {id} = req.params.id;
+    const {id} = req.params;
+
     try {
         //check the user contains the id for the note
         db.query('select id from notesdata where note_id =?',[id],(err,result)=>{
             if(err){
                 return res.status(401).json({message:"internal server error",err});
             }
-            else if(result.length>0  && id==req.user.id ){
+            
+            else if(result.length>0  && result[0].id==req.user.id ){
 
                 db.query('delete from notesdata where note_id=?',[id],(err,result)=>{
                     if(err){
@@ -72,6 +81,7 @@ const deleteNote = (req,res)=>{
                 })
             }
             else{
+            
                 return res.status(401).json({message:"unauthentiacated"});
             }
         })
@@ -87,19 +97,31 @@ const deleteNote = (req,res)=>{
 const updateNote = (req,res)=>{
     try {
         const {tag,description,title}=req.body;
-        const {id}=req.params.id;
+        const {id}=req.params;
+        const note_id=id;
     
-        if(!tag || !description ||!title){
+        if(!tag || !description ||!title||!note_id){
             return res.status(401).json({message:"insufficient credentials"});
         }
+        const sql = 'UPDATE notesdata SET note_title=?, note_description=?, note_tag=? WHERE note_id=?';
+        const values = [title, description, tag, note_id];
     
         
         //update the data in database with new values
-        db.query('update notesdata set ? where note_id=?',[{note_title:title,note_description:description,note_tag:tag},id],(err,result)=>{
+        db.query(sql,values,(err,result)=>{
+        
             if(err){
                 return res.status(503).send("server is down");
             }
-            return res.status(200).json({message:"note updated successfully",result});
+            // return res.status(200).json({message:"note updated successfully",data:result[0]});
+            db.query('SELECT * FROM notesdata WHERE id = ?', [req.user.id], (err, noteResult) => {
+                if (err) {
+                    return res.status(401).json({ message: "internal server error", err });
+                }
+                return res.status(200).json({ message: "note updated successfully", data: noteResult});
+            });
+            
+       
         })
     } catch (error) {
         return res.status(401).json({message:"internal server error"})

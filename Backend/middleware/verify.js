@@ -10,9 +10,9 @@ const db = mysql.createConnection({
 
 const verify = (req,res,next)=>{
     try {
-    //    console.log(req.headers.authorization);
+       
     if(!req.headers.authorization){
-        return res.status(401).send({message:"No autorization token"})
+        return res.status(401).send({message:"No  autorization token"})
     }
 
     const token = req.headers.authorization.split(" ")[1];
@@ -20,12 +20,15 @@ const verify = (req,res,next)=>{
     const decode = jwt.verify(token,"secret");
     
     let id = decode.id;
+   
     db.query('select * from userdata where id = ?',[id],(err,result)=>{
         if(err){
             return res.status("sql fetching error");
         }
         else{
+          
             req.user=result[0];
+         
             next();
             }
     })

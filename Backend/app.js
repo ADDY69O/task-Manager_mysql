@@ -1,11 +1,12 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors=require('cors');
 
-dotenv.config({path:'../AUTHAPP/.env'});
+dotenv.config({path:'./.env'});
 
 const app = express();
 app.use(express.json());
-
+app.use(cors());
 
 //db connection
 require("./db/conn")
